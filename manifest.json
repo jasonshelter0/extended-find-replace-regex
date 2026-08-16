@@ -1,10 +1,10 @@
 {
-	"id": "search-and-replace-regex",
-	"name": "Search and Replace Regex",
-	"version": "0.0.5",
+	"id": "extended-find-replace-regex",
+	"name": "Extended Find and Replace Regex",
+	"version": "1.0.0",
 	"minAppVersion": "1.11.4",
-	"description": "A powerful regex-based search and replace tool for the app with search highlighting and navigation.",
-	"author": "Justice Vellacott",
-	"authorUrl": "https://thejusticeman.github.io/",
+	"description": "A regex-based search and replace tool with selection-scoped search, high-contrast highlighting, navigation, and history. Extended from Search and Replace Regex by Justice Vellacott.",
+	"author": "Jason Shelter",
+	"authorUrl": "https://github.com/jasonshelter0",
 	"isDesktopOnly": false
 }

@@ -1,6 +1,7 @@
 import { Plugin } from "obsidian";
 import { createSearchExtension } from "./DocumentSearch";
 import { registerCommands } from "./commands";
+import { registerEditorMenu } from "./editorMenu";
 import {
   DEFAULT_SETTINGS,
   SearchAndReplaceRegexSettings,
@@ -16,6 +17,7 @@ export default class SearchAndReplaceRegex extends Plugin {
     this.registerEditorExtension(createSearchExtension(this.app, this));
 
     registerCommands(this);
+    registerEditorMenu(this);
 
     this.addSettingTab(new SearchAndReplaceRegexSettingTab(this.app, this));
   }

@@ -10,7 +10,6 @@ import { SearchHistoryManager } from "../utils/history";
 import { SearchInput } from "./SearchInput";
 import { ToggleButtonComponent } from "./components";
 import {
-  DEFAULT_SEARCH_OPTIONS,
   focusSearchInput,
   getReplaceQuery,
   getSearchOptions,
@@ -46,9 +45,8 @@ export class SearchPanel {
     private app: App,
     private settings: SearchAndReplaceRegexSettings,
     private onSettingsChange: () => Promise<void>,
-    private initialOptions: SearchOptions = DEFAULT_SEARCH_OPTIONS,
   ) {
-    this.currentOptions = { ...this.initialOptions };
+    this.currentOptions = { ...getSearchOptions(this.view.state) };
     this.dom = this.view.dom.ownerDocument.createElement("div");
     this.dom.classList.add("document-search-container");
     this.setupUI();

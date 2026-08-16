@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.0.0] - 2026-05-16
+
+### Extended Find and Replace Regex
+
+Rebranded fork of Search and Replace Regex, with many thanks to Justice Vellacott for the original plugin.
+
+#### New in this release
+
+- **Selection-scoped search and replace**: toggle "Selection only" to restrict search and replace to the currently selected text.
+- **Context menu actions**: right-click a selection and choose **Search in selection** or **Replace in selection** to open the panel pre-scoped.
+- **Persistent selection scope highlight**: the selected range stays visible even when the editor loses focus.
+- **High-contrast match highlighting**: plugin-owned highlight styles so matches stay visible across themes.
+- **Stability fixes**: the frozen search scope now maps correctly through document edits, and decoration updates no longer flicker.
+- **Performance**: removed unnecessary recomputation on scroll and memoized regex compilation.
+
 ## [0.0.5] - 2026-05-16
 
 ### Selection-only search and replace

@@ -21,6 +21,15 @@ export class SearchMatcher {
     this.updateRegex(query);
   }
 
+  private sameRegexConfig(query: string, options: SearchOptions): boolean {
+    return (
+      query === this.lastQuery &&
+      options.caseSensitive === this.lastOptions.caseSensitive &&
+      options.wholeWord === this.lastOptions.wholeWord &&
+      options.useRegex === this.lastOptions.useRegex
+    );
+  }
+
   updateRegex(
     query: string,
     options: SearchOptions = {
@@ -30,6 +39,15 @@ export class SearchMatcher {
       selectionOnly: false,
     },
   ): void {
+    // Keep the compiled regex when the regex-relevant config is unchanged
+    // (checked against the previous values). Non-regex fields such as
+    // selectionOnly are refreshed below without rebuilding.
+    if (this.regex !== null && this.sameRegexConfig(query, options)) {
+      this.lastQuery = query;
+      this.lastOptions = options;
+      return;
+    }
+
     this.lastQuery = query;
     this.lastOptions = options;
 

@@ -43,28 +43,8 @@ class DocumentSearch implements PluginValue {
 
   update(update: ViewUpdate) {
     const selectionOnly = getSearchOptions(update.view.state).selectionOnly;
-
-    // When selectionOnly is on, snap user-initiated selection changes into the
-    // search scope so the user can adjust the range. Navigate (programmatic)
-    // selections are ignored — they have no userEvent.
-    if (
-      selectionOnly &&
-      update.selectionSet &&
-      update.transactions.some(
-        (tr) => tr.isUserEvent("select") || tr.isUserEvent("select.pointer"),
-      )
-    ) {
-      const sel = update.view.state.selection.main;
-      if (sel.from !== sel.to) {
-        update.view.dispatch({
-          effects: [setSearchScope.of({ from: sel.from, to: sel.to })],
-        });
-      }
-    }
-
     const changed =
       update.docChanged ||
-      update.viewportChanged ||
       (selectionOnly && update.selectionSet) ||
       update.transactions.some((tr) =>
         tr.effects.some(
@@ -131,8 +111,8 @@ class DocumentSearch implements PluginValue {
         Decoration.mark({
           class:
             index === currentIndex
-              ? "obsidian-search-match-highlight"
-              : "cm-highlight",
+              ? "document-search-match-current"
+              : "document-search-match",
         }).range(match.start, match.end),
       );
     });

@@ -1,4 +1,4 @@
-/* Search and Replace Regex Plugin Styles */
+/* Extended Find and Replace Regex Plugin Styles */
 
 /**
  * Most of the styling is done by native Obsidian styles
@@ -10,6 +10,20 @@
 }
 .clickable-icon.extra-setting-button.active {
   color: var(--text-accent);
+}
+
+/* Match highlights — plugin-specific classes so we don't depend on
+   Obsidian's built-in search highlight styling, which varies by theme
+   and can be nearly invisible. */
+.document-search-match {
+  background-color: var(--text-highlight-bg, hsl(50 100% 60% / 0.4));
+  border-radius: 2px;
+}
+
+.document-search-match-current {
+  background-color: hsl(30 100% 55% / 0.5);
+  border-radius: 2px;
+  box-shadow: inset 0 0 0 1px var(--text-accent, hsl(30 100% 45%));
 }
 
 /* Persistent highlight for the selection range when "Selection only" is on.

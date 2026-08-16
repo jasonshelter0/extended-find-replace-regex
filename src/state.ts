@@ -45,7 +45,13 @@ export const setSearchQuery = StateEffect.define<string>();
 export const setReplaceQuery = StateEffect.define<string>();
 export const setSearchOptions = StateEffect.define<SearchOptions>();
 export const setMatchIndex = StateEffect.define<number>();
-export const setSearchScope = StateEffect.define<{from: number; to: number} | null>();
+
+export interface SearchScope {
+  from: number;
+  to: number;
+}
+
+export const setSearchScope = StateEffect.define<SearchScope | null>();
 
 export const getSearchScope = (state: EditorState) =>
   state.field(searchScopeField);
@@ -89,7 +95,34 @@ export const matchIndexField = StateField.define<number>({
   update: (v, tr) => updateField(v, tr, setMatchIndex),
 });
 
-export const searchScopeField = StateField.define<{from: number; to: number} | null>({
+export const searchScopeField = StateField.define<SearchScope | null>({
   create: () => null,
-  update: (v, tr) => updateField(v, tr, setSearchScope),
+  update: (value, tr) => {
+    // Explicit set (toggle on/off, context menu) takes precedence.
+    for (const e of tr.effects) {
+      if (e.is(setSearchScope)) return e.value;
+    }
+
+    let scope = value;
+
+    // Map the scope through document changes so it stays valid after edits.
+    if (scope && tr.docChanged) {
+      scope = {
+        from: tr.changes.mapPos(scope.from, 1),
+        to: tr.changes.mapPos(scope.to, -1),
+      };
+    }
+
+    // When selection-only mode is on and the user manually changes the
+    // selection, snap the new selection into the scope. Programmatic
+    // navigation selections have no userEvent and are ignored here.
+    if (getSearchOptions(tr.state).selectionOnly && tr.isUserEvent("select")) {
+      const sel = tr.state.selection.main;
+      if (sel.from !== sel.to) {
+        scope = { from: sel.from, to: sel.to };
+      }
+    }
+
+    return scope;
+  },
 });

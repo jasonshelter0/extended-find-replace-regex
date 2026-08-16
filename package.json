@@ -1,9 +1,14 @@
 {
-  "name": "search-and-replace-regex",
-  "version": "0.0.5",
-  "description": "A powerful regex-based search and replace tool for the app with search highlighting and navigation.",
+  "name": "extended-find-replace-regex",
+  "version": "1.0.0",
+  "description": "A regex-based search and replace tool for Obsidian with selection-scoped search, high-contrast highlighting, navigation, and history. Extended from Search and Replace Regex by Justice Vellacott.",
   "main": "main.js",
   "type": "module",
+  "author": "Jason Shelter",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jasonshelter0/extended-find-replace-regex.git"
+  },
   "scripts": {
     "dev": "node esbuild.config.mjs",
     "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
@@ -12,8 +17,8 @@
     "release": "bash release.sh",
     "format": "prettier --write \"src/**/*.ts\" && prettier --write \"*.md\""
   },
-  "keywords": [],
-  "license": "0-BSD",
+  "keywords": ["obsidian", "search", "replace", "regex"],
+  "license": "MIT",
   "devDependencies": {
     "@codemirror/state": "^6.5.0",
     "@codemirror/view": "^6.38.0",
