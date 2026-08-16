@@ -7,6 +7,7 @@ import {
   getSearchQuery,
   getReplaceQuery,
   getSearchOptions,
+  getSearchScope,
   getMatchIndex,
   setMatchIndex,
 } from "../state";
@@ -30,6 +31,22 @@ export class SearchHandler {
     this.matcher.updateRegex(query, options);
     if (!this.matcher.isValid()) return null;
 
+    if (options.selectionOnly) {
+      const scope = getSearchScope(this.view.state);
+      if (!scope) return null;
+      const selectedText = this.view.state.doc.sliceString(scope.from, scope.to);
+      const matches = this.matcher.findMatches(selectedText);
+      return {
+        text: selectedText,
+        matches: matches.map((m) => ({
+          ...m,
+          start: m.start + scope.from,
+          end: m.end + scope.from,
+        })),
+        selectionRange: scope,
+      };
+    }
+
     const text = this.view.state.doc.toString();
     return { text, matches: this.matcher.findMatches(text) };
   }
@@ -51,6 +68,17 @@ export class SearchHandler {
         setMatchIndex.of(newIndex),
       ],
     });
+
+    // In selection-only mode, keep the selection range visible for context
+    if (data.selectionRange) {
+      this.view.dispatch({
+        effects: [
+          EditorView.scrollIntoView(data.selectionRange.from, {
+            y: "center",
+          }),
+        ],
+      });
+    }
   }
 
   async replace(all = false) {
@@ -76,9 +104,20 @@ export class SearchHandler {
     }
 
     if (replaced) {
-      this.view.dispatch({
-        changes: { from: 0, to: doc.length, insert: newText },
-      });
+      if (data.selectionRange) {
+        // Replace only within the selection range
+        this.view.dispatch({
+          changes: {
+            from: data.selectionRange.from,
+            to: data.selectionRange.to,
+            insert: newText,
+          },
+        });
+      } else {
+        this.view.dispatch({
+          changes: { from: 0, to: doc.length, insert: newText },
+        });
+      }
       if (!all) {
         const move =
           (this.getMatches()?.matches.length || 0) - data.matches.length + 1;

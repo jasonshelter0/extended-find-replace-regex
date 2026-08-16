@@ -14,6 +14,7 @@ export class SearchMatcher {
     caseSensitive: false,
     wholeWord: false,
     useRegex: true,
+    selectionOnly: false,
   };
 
   constructor(private query: string = "") {
@@ -26,6 +27,7 @@ export class SearchMatcher {
       caseSensitive: false,
       wholeWord: false,
       useRegex: true,
+      selectionOnly: false,
     },
   ): void {
     this.lastQuery = query;

@@ -1,3 +1,4 @@
+import { StateEffect } from "@codemirror/state";
 import { EditorView, Panel, ViewUpdate } from "@codemirror/view";
 import { App } from "obsidian";
 import { SearchAndReplaceRegexSettings, SearchHistoryEntry } from "../settings";
@@ -20,6 +21,7 @@ import {
   setReplaceQuery,
   setSearchOptions,
   setSearchQuery,
+  setSearchScope,
   toggleSearchPanel,
 } from "../state";
 
@@ -34,6 +36,7 @@ export class SearchPanel {
   private caseSensitiveToggle!: ToggleButtonComponent;
   private wholeWordToggle!: ToggleButtonComponent;
   private regexToggle!: ToggleButtonComponent;
+  private selectionOnlyToggle!: ToggleButtonComponent;
   private currentOptions: SearchOptions;
   private historyIndex = -1;
   private draftEntry: SearchHistoryEntry | null = null;
@@ -107,6 +110,12 @@ export class SearchPanel {
       "Use regex",
       opts.useRegex,
       (v) => this.updateOptions({ useRegex: v }),
+    );
+    this.selectionOnlyToggle = this.searchInput.addToggle(
+      "text-cursor",
+      "Selection only\nSearch only within selected text",
+      opts.selectionOnly,
+      (v) => this.updateOptions({ selectionOnly: v }),
     );
 
     this.searchInput
@@ -306,10 +315,25 @@ export class SearchPanel {
   }
 
   private updateOptions(updates: Partial<SearchOptions>): void {
+    const wasSelectionOnly = this.currentOptions.selectionOnly;
     this.currentOptions = { ...this.currentOptions, ...updates };
-    this.view.dispatch({
-      effects: [setSearchOptions.of(this.currentOptions), setMatchIndex.of(0)],
-    });
+    const effects: StateEffect<unknown>[] = [
+      setSearchOptions.of(this.currentOptions),
+      setMatchIndex.of(0),
+    ];
+
+    // When toggling selectionOnly on, snapshot the current selection as the
+    // frozen search scope so navigation doesn't clobber it.
+    if (!wasSelectionOnly && this.currentOptions.selectionOnly) {
+      const sel = this.view.state.selection.main;
+      if (sel.from !== sel.to) {
+        effects.push(setSearchScope.of({ from: sel.from, to: sel.to }));
+      }
+    } else if (!this.currentOptions.selectionOnly) {
+      effects.push(setSearchScope.of(null));
+    }
+
+    this.view.dispatch({ effects });
   }
 
   setOptions(options: SearchOptions): this {
@@ -317,6 +341,7 @@ export class SearchPanel {
     this.caseSensitiveToggle.setValue(options.caseSensitive);
     this.wholeWordToggle.setValue(options.wholeWord);
     this.regexToggle.setValue(options.useRegex);
+    this.selectionOnlyToggle.setValue(options.selectionOnly);
     return this;
   }
 }

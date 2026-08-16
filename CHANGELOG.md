@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.0.5] - 2026-05-16
+
+### Selection-only search and replace
+
+- Added a "Selection only" toggle to the search panel that restricts search and replace to the currently selected text.
+- The selection scope is frozen when the toggle is enabled, so navigating between matches no longer collapses the search range.
+- Added a persistent visual highlight of the selected range that stays visible even when the editor loses focus.
+
 ## [0.0.4] - 2026-05-16
 
 - Fix the release

@@ -14,6 +14,7 @@ import {
   getMatchIndex,
   getSearchOptions,
   getSearchQuery,
+  getSearchScope,
   isSearchPanelOpen,
   matchIndexField,
   replaceModeField,
@@ -21,9 +22,11 @@ import {
   searchOptionsField,
   searchPanelOpenField,
   searchQueryField,
+  searchScopeField,
   setMatchIndex,
   setSearchOptions,
   setSearchQuery,
+  setSearchScope,
   toggleSearchPanel,
 } from "./state";
 import SearchAndReplaceRegex from "./main";
@@ -39,14 +42,36 @@ class DocumentSearch implements PluginValue {
   }
 
   update(update: ViewUpdate) {
+    const selectionOnly = getSearchOptions(update.view.state).selectionOnly;
+
+    // When selectionOnly is on, snap user-initiated selection changes into the
+    // search scope so the user can adjust the range. Navigate (programmatic)
+    // selections are ignored — they have no userEvent.
+    if (
+      selectionOnly &&
+      update.selectionSet &&
+      update.transactions.some(
+        (tr) => tr.isUserEvent("select") || tr.isUserEvent("select.pointer"),
+      )
+    ) {
+      const sel = update.view.state.selection.main;
+      if (sel.from !== sel.to) {
+        update.view.dispatch({
+          effects: [setSearchScope.of({ from: sel.from, to: sel.to })],
+        });
+      }
+    }
+
     const changed =
       update.docChanged ||
       update.viewportChanged ||
+      (selectionOnly && update.selectionSet) ||
       update.transactions.some((tr) =>
         tr.effects.some(
           (e) =>
             e.is(setSearchQuery) ||
             e.is(setSearchOptions) ||
+            e.is(setSearchScope) ||
             e.is(setMatchIndex) ||
             e.is(toggleSearchPanel),
         ),
@@ -58,27 +83,59 @@ class DocumentSearch implements PluginValue {
   computeDecorations(view: EditorView): DecorationSet {
     if (!isSearchPanelOpen(view.state)) return Decoration.none;
 
-    const query = getSearchQuery(view.state);
-    if (!query) return Decoration.none;
-
-    this.matcher.updateRegex(query, getSearchOptions(view.state));
-    if (!this.matcher.isValid()) return Decoration.none;
-
-    const currentIndex = getMatchIndex(view.state);
+    const options = getSearchOptions(view.state);
     const builder: Range<Decoration>[] = [];
 
-    this.matcher
-      .findMatches(view.state.doc.toString())
-      .forEach((match, index) => {
+    // In selection-only mode, highlight the search scope so it stays visible
+    // even when the editor loses focus to the search input.
+    if (options.selectionOnly) {
+      const scope = getSearchScope(view.state);
+      if (scope) {
         builder.push(
           Decoration.mark({
-            class:
-              index === currentIndex
-                ? "obsidian-search-match-highlight"
-                : "cm-highlight",
-          }).range(match.start, match.end),
+            class: "document-search-selection-range",
+          }).range(scope.from, scope.to),
         );
-      });
+      }
+    }
+
+    const query = getSearchQuery(view.state);
+    if (!query) return Decoration.set(builder, true);
+
+    this.matcher.updateRegex(query, options);
+    if (!this.matcher.isValid()) return Decoration.set(builder, true);
+
+    const currentIndex = getMatchIndex(view.state);
+
+    let matches;
+    if (options.selectionOnly) {
+      const scope = getSearchScope(view.state);
+      if (!scope) return Decoration.set(builder, true);
+      const selectedText = view.state.doc.sliceString(
+        scope.from,
+        scope.to,
+      );
+      matches = this.matcher
+        .findMatches(selectedText)
+        .map((m) => ({
+          ...m,
+          start: m.start + scope.from,
+          end: m.end + scope.from,
+        }));
+    } else {
+      matches = this.matcher.findMatches(view.state.doc.toString());
+    }
+
+    matches.forEach((match, index) => {
+      builder.push(
+        Decoration.mark({
+          class:
+            index === currentIndex
+              ? "obsidian-search-match-highlight"
+              : "cm-highlight",
+        }).range(match.start, match.end),
+      );
+    });
 
     return Decoration.set(builder, true);
   }
@@ -92,6 +149,7 @@ export function createSearchExtension(app: App, plugin: SearchAndReplaceRegex) {
     searchPanelOpenField,
     replaceModeField,
     matchIndexField,
+    searchScopeField,
     showPanel.from(searchPanelOpenField, (val) =>
       val ? (view: EditorView) => createSearchPanel(view, app, plugin) : null,
     ),

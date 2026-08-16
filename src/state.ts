@@ -10,12 +10,14 @@ export interface SearchOptions {
   caseSensitive: boolean;
   wholeWord: boolean;
   useRegex: boolean;
+  selectionOnly: boolean;
 }
 
 export const DEFAULT_SEARCH_OPTIONS: SearchOptions = {
   caseSensitive: false,
   wholeWord: false,
   useRegex: true,
+  selectionOnly: false,
 };
 
 export const getSearchQuery = (state: EditorState) =>
@@ -43,6 +45,10 @@ export const setSearchQuery = StateEffect.define<string>();
 export const setReplaceQuery = StateEffect.define<string>();
 export const setSearchOptions = StateEffect.define<SearchOptions>();
 export const setMatchIndex = StateEffect.define<number>();
+export const setSearchScope = StateEffect.define<{from: number; to: number} | null>();
+
+export const getSearchScope = (state: EditorState) =>
+  state.field(searchScopeField);
 
 const updateField = <T>(
   value: T,
@@ -81,4 +87,9 @@ export const searchOptionsField = StateField.define<SearchOptions>({
 export const matchIndexField = StateField.define<number>({
   create: () => 0,
   update: (v, tr) => updateField(v, tr, setMatchIndex),
+});
+
+export const searchScopeField = StateField.define<{from: number; to: number} | null>({
+  create: () => null,
+  update: (v, tr) => updateField(v, tr, setSearchScope),
 });
