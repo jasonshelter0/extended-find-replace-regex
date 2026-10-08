@@ -34,7 +34,10 @@ export class SearchHandler {
     if (options.selectionOnly) {
       const scope = getSearchScope(this.view.state);
       if (!scope) return null;
-      const selectedText = this.view.state.doc.sliceString(scope.from, scope.to);
+      const selectedText = this.view.state.doc.sliceString(
+        scope.from,
+        scope.to,
+      );
       const matches = this.matcher.findMatches(selectedText);
       return {
         text: selectedText,
@@ -86,7 +89,6 @@ export class SearchHandler {
     if (!data || data.matches.length === 0) return;
 
     const replaceText = getReplaceQuery(this.view.state);
-    const doc = this.view.state.doc;
     let newText: string;
     let replaced = false;
 
@@ -104,18 +106,34 @@ export class SearchHandler {
     }
 
     if (replaced) {
-      if (data.selectionRange) {
-        // Replace only within the selection range
+      // Keep the editor transaction to the actual changed span. Replacing
+      // the whole note for one hit rebuilds unrelated Live Preview widgets.
+      const oldText = data.text;
+      let from = 0;
+      while (
+        from < oldText.length &&
+        from < newText.length &&
+        oldText[from] === newText[from]
+      )
+        from++;
+      let oldEnd = oldText.length;
+      let newEnd = newText.length;
+      while (
+        oldEnd > from &&
+        newEnd > from &&
+        oldText[oldEnd - 1] === newText[newEnd - 1]
+      ) {
+        oldEnd--;
+        newEnd--;
+      }
+      if (from !== oldEnd || from !== newEnd) {
+        const offset = data.selectionRange?.from ?? 0;
         this.view.dispatch({
           changes: {
-            from: data.selectionRange.from,
-            to: data.selectionRange.to,
-            insert: newText,
+            from: offset + from,
+            to: offset + oldEnd,
+            insert: newText.slice(from, newEnd),
           },
-        });
-      } else {
-        this.view.dispatch({
-          changes: { from: 0, to: doc.length, insert: newText },
         });
       }
       if (!all) {

@@ -9,6 +9,7 @@ import { SearchHistoryModal } from "./SearchHistoryModal";
 import { SearchHistoryManager } from "../utils/history";
 import { SearchInput } from "./SearchInput";
 import { ToggleButtonComponent } from "./components";
+import { PresetModal } from "./PresetModal";
 import {
   focusSearchInput,
   getReplaceQuery,
@@ -128,6 +129,7 @@ export class SearchPanel {
       .addBtn("history", "Search history\nCtrl/Cmd + Down", () =>
         this.showHistory(),
       )
+      .addBtn("bookmark", "Choose regex preset", () => this.showPresets())
       .addBtn("x", "Exit search", () => this.closeSearch());
 
     this.replaceInput
@@ -279,6 +281,27 @@ export class SearchPanel {
       },
     );
     this.historyModal.open();
+  }
+
+  private showPresets(): void {
+    new PresetModal(this.app, this.settings.presets, (preset) => {
+      const rule = preset.rules[0];
+      if (!rule) return;
+      this.view.dispatch({
+        effects: [
+          setSearchQuery.of(rule.query),
+          setReplaceQuery.of(rule.replace),
+          setSearchOptions.of({
+            caseSensitive: rule.caseSensitive,
+            wholeWord: rule.wholeWord,
+            useRegex: true,
+            selectionOnly: false,
+          }),
+          setMatchIndex.of(0),
+          setSearchScope.of(null),
+        ],
+      });
+    }).open();
   }
 
   private applyHistoryEntry(entry: SearchHistoryEntry): void {

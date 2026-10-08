@@ -1,5 +1,7 @@
 import { Range } from "@codemirror/state";
 import { SearchMatcher } from "./search/SearchMatcher";
+import { RenderedHighlights } from "./search/RenderedHighlights";
+import { NewlineMatchWidget } from "./search/NewlineMatchWidget";
 import {
   Decoration,
   DecorationSet,
@@ -36,9 +38,12 @@ import { SearchPanel } from "./ui/SearchPanel";
 class DocumentSearch implements PluginValue {
   decorations: DecorationSet;
   private matcher: SearchMatcher = new SearchMatcher();
+  private rendered: RenderedHighlights;
 
   constructor(view: EditorView) {
+    this.rendered = new RenderedHighlights(view);
     this.decorations = this.computeDecorations(view);
+    this.updateRendered(view);
   }
 
   update(update: ViewUpdate) {
@@ -58,6 +63,21 @@ class DocumentSearch implements PluginValue {
       );
 
     if (changed) this.decorations = this.computeDecorations(update.view);
+    if (changed || update.viewportChanged || update.geometryChanged)
+      this.updateRendered(update.view);
+  }
+
+  private updateRendered(view: EditorView): void {
+    this.rendered.update(
+      isSearchPanelOpen(view.state) ? getSearchQuery(view.state) : "",
+      getSearchOptions(view.state),
+      getMatchIndex(view.state),
+      getSearchScope(view.state),
+    );
+  }
+
+  destroy(): void {
+    this.rendered.destroy();
   }
 
   computeDecorations(view: EditorView): DecorationSet {
@@ -91,22 +111,27 @@ class DocumentSearch implements PluginValue {
     if (options.selectionOnly) {
       const scope = getSearchScope(view.state);
       if (!scope) return Decoration.set(builder, true);
-      const selectedText = view.state.doc.sliceString(
-        scope.from,
-        scope.to,
-      );
-      matches = this.matcher
-        .findMatches(selectedText)
-        .map((m) => ({
-          ...m,
-          start: m.start + scope.from,
-          end: m.end + scope.from,
-        }));
+      const selectedText = view.state.doc.sliceString(scope.from, scope.to);
+      matches = this.matcher.findMatches(selectedText).map((m) => ({
+        ...m,
+        start: m.start + scope.from,
+        end: m.end + scope.from,
+      }));
     } else {
       matches = this.matcher.findMatches(view.state.doc.toString());
     }
 
     matches.forEach((match, index) => {
+      if (match.start === match.end) return;
+      if (/^\n+$/.test(match.text)) {
+        builder.push(
+          Decoration.widget({
+            widget: new NewlineMatchWidget(index === currentIndex),
+            side: 1,
+          }).range(match.start),
+        );
+        return;
+      }
       builder.push(
         Decoration.mark({
           class:

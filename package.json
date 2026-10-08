@@ -1,7 +1,7 @@
 {
   "name": "extended-find-replace-regex",
-  "version": "1.0.0",
-  "description": "A regex-based search and replace tool for Obsidian with selection-scoped search, high-contrast highlighting, navigation, and history. Extended from Search and Replace Regex by Justice Vellacott.",
+  "version": "1.1.0",
+  "description": "Search and replace note text with JavaScript regular expressions, lookarounds, selection scoping, reusable presets, and ordered pipelines.",
   "main": "main.js",
   "type": "module",
   "author": "Jason Shelter",

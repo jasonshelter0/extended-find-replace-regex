@@ -23,7 +23,43 @@
 .document-search-match-current {
   background-color: hsl(30 100% 55% / 0.5);
   border-radius: 2px;
-  box-shadow: inset 0 0 0 1px var(--text-accent, hsl(30 100% 45%));
+  outline: 1px solid var(--text-accent, hsl(30 100% 45%));
+}
+
+.document-search-newline-match {
+  display: inline-block;
+  margin-inline: 2px;
+  padding-inline: 2px;
+  border-radius: 2px;
+  background-color: var(--text-highlight-bg, hsl(50 100% 60% / 0.4));
+  color: var(--text-normal);
+  line-height: 1;
+  pointer-events: none;
+}
+
+.document-search-newline-match-current {
+  background-color: hsl(30 100% 55% / 0.5);
+  outline: 1px solid var(--text-accent, hsl(30 100% 45%));
+}
+
+/* Live Preview widgets replace Markdown source ranges with rendered DOM. */
+::highlight(document-search-rendered) {
+  background-color: var(--text-highlight-bg, hsl(50 100% 60% / 0.4));
+}
+
+.document-search-rendered-outlines {
+  position: fixed;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 999;
+}
+
+.document-search-rendered-outline {
+  position: absolute;
+  box-sizing: border-box;
+  border: 1px solid var(--text-accent, hsl(30 100% 45%));
+  border-radius: 2px;
+  pointer-events: none;
 }
 
 /* Persistent highlight for the selection range when "Selection only" is on.
@@ -34,4 +70,42 @@
   background-color: hsla(210, 50%, 50%, 0.06);
   box-shadow: inset 0 0 0 1px var(--text-muted);
   border-radius: 2px;
+}
+
+.regex-preset-card {
+  margin: 1rem 0;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-m);
+  background: var(--background-secondary);
+}
+
+.regex-preset-name {
+  cursor: pointer;
+  font-weight: var(--font-semibold);
+}
+
+.regex-preset-content {
+  padding-top: 0.5rem;
+}
+
+.regex-preset-rule {
+  margin: 0.75rem 0 0.75rem 1rem;
+  padding: 0.5rem 0.75rem;
+  border-left: 2px solid var(--interactive-accent);
+  border-radius: var(--radius-s);
+  background: var(--background-primary);
+}
+
+.regex-preset-rule > .setting-item:not(:first-child) {
+  margin-left: 1rem;
+  padding-left: 0.75rem;
+  border-left: 1px solid var(--background-modifier-border);
+}
+
+.regex-preset-rule .document-search-buttons {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 0.25rem;
 }

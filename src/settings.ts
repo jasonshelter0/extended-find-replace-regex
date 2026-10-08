@@ -1,6 +1,8 @@
 import { App, PluginSettingTab, SettingGroup } from "obsidian";
 import SearchAndReplaceRegex from "./main";
 import { DEFAULT_SEARCH_OPTIONS, SearchOptions } from "./state";
+import { RegexPreset, RegexPresetPipeline } from "./presets";
+import { renderRegexPresetSettings } from "./ui/PresetSettings";
 
 export interface SearchHistoryEntry {
   query: string;
@@ -13,12 +15,16 @@ export interface SearchAndReplaceRegexSettings {
   defaultSearchOptions: SearchOptions;
   searchHistory: SearchHistoryEntry[];
   maxHistoryItems: number;
+  presets: RegexPreset[];
+  presetPipelines: RegexPresetPipeline[];
 }
 
 export const DEFAULT_SETTINGS: SearchAndReplaceRegexSettings = {
   defaultSearchOptions: DEFAULT_SEARCH_OPTIONS,
   searchHistory: [],
   maxHistoryItems: 20,
+  presets: [],
+  presetPipelines: [],
 };
 
 export class SearchAndReplaceRegexSettingTab extends PluginSettingTab {
@@ -89,5 +95,7 @@ export class SearchAndReplaceRegexSettingTab extends PluginSettingTab {
               }),
           ),
     );
+
+    renderRegexPresetSettings(containerEl, this.plugin, () => this.display());
   }
 }
